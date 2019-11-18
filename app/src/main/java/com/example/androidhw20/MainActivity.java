@@ -3,6 +3,7 @@ package com.example.androidhw20;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,13 +25,14 @@ import java.net.URL;
 public class MainActivity extends AppCompatActivity {
 
 ImageView imageView;
-
+private ProgressDialog progressBar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         imageView = (ImageView) findViewById(R.id.imageView);
+
         final Button inputbtn = (Button) findViewById(R.id.inputWeb);
 
         inputbtn.setOnClickListener(new View.OnClickListener() {
@@ -48,20 +50,30 @@ ImageView imageView;
             //執行前 設定可以在這邊設定
             super.onPreExecute();
             Log.d("Tag onPreExecute", String.valueOf(Thread.currentThread().getId()));
+            progressBar = new ProgressDialog(MainActivity.this);
+            progressBar.setMessage("Loading…");
+            progressBar.setCancelable(false);
+            progressBar.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            progressBar.show();
         }
 
         @Override
         protected Bitmap doInBackground(String... params) {
             //執行中 在背景做事情
             Log.d("Tag doInBackground", String.valueOf(Thread.currentThread().getId()));
+            int progress = 0;
+
+
             String urlStr = params[0];
             try {
                 URL url = new URL(urlStr);
                 return BitmapFactory.decodeStream(url.openConnection().getInputStream());
             } catch (Exception e) {
                 e.printStackTrace();
-                return null;
             }
+            publishProgress(progress+=100);
+            publishProgress(100);
+            return null;
         }
 
         @Override
@@ -69,6 +81,7 @@ ImageView imageView;
             //執行中 可以在這邊告知使用者進度
             super.onProgressUpdate(values);
             Log.d("Tag onProgressUpdate", String.valueOf(Thread.currentThread().getId()));
+            progressBar.setProgress(values[0]);
         }
 
         @Override
@@ -77,6 +90,7 @@ ImageView imageView;
             super.onPostExecute(bitmap);
             Log.d("Tag onPostExecute", String.valueOf(Thread.currentThread().getId()));
             imageView.setImageBitmap(bitmap);
+            progressBar.dismiss();
         }
     }
 
